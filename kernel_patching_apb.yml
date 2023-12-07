@@ -38,9 +38,11 @@
       when: "'kpatch-patch' in kpatch_search_result.stdout"
     - debug:
         msg: "kpatch updated successfully."
+    
 
     - name: Check CVE in kpatch
       command: dnf changelog "kpatch-patch = {{ kernel_version.stdout }}"
       when: "'kpatch-patch' in kpatch_search_result.stdout"
+      register: changelog_output
     - debug:
-        var: kpatch_list_output.stdout_lines
+        var: changelog_output
