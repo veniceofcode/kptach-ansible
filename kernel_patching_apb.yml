@@ -1,0 +1,34 @@
+---
+- hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Find kernel version
+      command: uname -r
+      register: kernel_version
+      become: true
+
+    - name: Find kpatch for the kernel version
+      command: dnf search "{{ kernel_version.stdout }}"
+      register: kpatch_search_result
+      become: true
+
+    - name: Install kpatch
+      command: dnf install -y "kpatch-patch = {{ kernel_version.stdout }}"
+      when: "'kpatch-patch' in kpatch_search_result.stdout"
+      become: true
+
+    - name: Verify kernel patch
+      command: kpatch list
+      when: "'kpatch-patch' in kpatch_search_result.stdout"
+      become: true
+
+    - name: Update kpatch
+      command: dnf update -y "kpatch-patch = {{ kernel_version.stdout }}"
+      when: "'kpatch-patch' in kpatch_search_result.stdout"
+      become: true
+
+    - name: Check CVE in kpatch
+      command: dnf changelog "kpatch-patch = {{ kernel_version.stdout }}"
+      when: "'kpatch-patch' in kpatch_search_result.stdout"
+      become: true
