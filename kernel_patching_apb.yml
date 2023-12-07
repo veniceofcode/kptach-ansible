@@ -12,7 +12,7 @@
       register: kpatch_search_result
 
     - name: Install kpatch
-      command: dnf install -y "kpatch-patch-{{ kernel_version.stdout }}"
+      command: dnf install -y "kpatch-patch-{{ kernel_version.stdout }}*"
       when: "'kpatch-patch' in kpatch_search_result.stdout"
 
     - name: Verify kernel patch
