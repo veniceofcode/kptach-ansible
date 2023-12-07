@@ -6,36 +6,41 @@
     - name: Find kernel version
       command: uname -r
       register: kernel_version
-      become: true
+    - debug:
+        var: kernel_version.stdout
 
     - name: Find kpatch for the kernel version
       command: dnf search "{{ kernel_version.stdout }}"
       register: kpatch_search_result
-      become: true
+    - debug:
+        var: kpatch_search_result.stdout
 
     - name: Install kpatch
       command: dnf install -y "kpatch-patch = {{ kernel_version.stdout }}"
       when: "'kpatch-patch' in kpatch_search_result.stdout"
-      become: true
+    - debug:
+        msg: "kpatch installed successfully."
 
     - name: Verify kernel patch
       command: kpatch list
       register: kpatch_list_output
       when: "'kpatch-patch' in kpatch_search_result.stdout"
-      become: true
+    - debug:
+        var: kpatch_list_output.stdout_lines
 
     - name: Fail if kpatch list is empty
       fail:
         msg: "No kernel patches applied. Verify kpatch installation."
       when: kpatch_list_output.stdout_lines | length == 0
-      become: true
 
     - name: Update kpatch
       command: dnf update -y "kpatch-patch = {{ kernel_version.stdout }}"
       when: "'kpatch-patch' in kpatch_search_result.stdout"
-      become: true
+    - debug:
+        msg: "kpatch updated successfully."
 
     - name: Check CVE in kpatch
       command: dnf changelog "kpatch-patch = {{ kernel_version.stdout }}"
       when: "'kpatch-patch' in kpatch_search_result.stdout"
-      become: true
+    - debug:
+        var: kpatch_list_output.stdout_lines
