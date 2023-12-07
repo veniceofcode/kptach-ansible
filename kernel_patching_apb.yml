@@ -6,43 +6,29 @@
     - name: Find kernel version
       command: uname -r
       register: kernel_version
-    - debug:
-        var: kernel_version.stdout
 
     - name: Find kpatch for the kernel version
       command: dnf search "{{ kernel_version.stdout }}"
       register: kpatch_search_result
-    - debug:
-        var: kpatch_search_result.stdout
 
     - name: Install kpatch
       command: dnf install -y "kpatch-patch = {{ kernel_version.stdout }}"
       when: "'kpatch-patch' in kpatch_search_result.stdout"
-    - debug:
-        msg: "kpatch installed successfully."
 
     - name: Verify kernel patch
       command: kpatch list
       register: kpatch_list_output
       when: "'kpatch-patch' in kpatch_search_result.stdout"
-    - debug:
-        var: kpatch_list_output.stdout_lines
 
     - name: Fail if kpatch list is empty
       fail:
         msg: "No kernel patches applied. Verify kpatch installation."
       when: kpatch_list_output.stdout_lines | length == 0
 
-    - name: Update kpatch
-      command: dnf update -y "kpatch-patch = {{ kernel_version.stdout }}"
-      when: "'kpatch-patch' in kpatch_search_result.stdout"
-    - debug:
-        msg: "kpatch updated successfully."
-    
-
-    - name: Check CVE in kpatch
-      command: dnf changelog "kpatch-patch = {{ kernel_version.stdout }}"
-      when: "'kpatch-patch' in kpatch_search_result.stdout"
+    - name: Get kpatch package changelog
+      command: rpm -q --changelog "kpatch-patch-{{ kernel_version.stdout }}"
       register: changelog_output
+      ignore_errors: true
+
     - debug:
-        var: changelog_output
+        var: changelog_output.stdout_lines
