@@ -20,7 +20,14 @@
 
     - name: Verify kernel patch
       command: kpatch list
+      register: kpatch_list_output
       when: "'kpatch-patch' in kpatch_search_result.stdout"
+      become: true
+
+    - name: Fail if kpatch list is empty
+      fail:
+        msg: "No kernel patches applied. Verify kpatch installation."
+      when: kpatch_list_output.stdout_lines | length == 0
       become: true
 
     - name: Update kpatch
